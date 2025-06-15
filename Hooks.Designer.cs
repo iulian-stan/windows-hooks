@@ -19,7 +19,7 @@ namespace WindowsHooks
         /// The POINT structure defines the x- and y- coordinates of a point.
         /// </summary>
         /// <remarks>
-        /// http://msdn.microsoft.com/library/default.asp?url=/library/en-us/gdi/rectangl_0tiq.asp
+        /// https://learn.microsoft.com/en-us/windows/win32/api/windef/ns-windef-point
         /// </remarks>
         [StructLayout(LayoutKind.Sequential)]
         private class POINT
@@ -38,7 +38,7 @@ namespace WindowsHooks
         /// The MOUSEHOOKSTRUCT structure contains information about a mouse event passed to a WH_MOUSE hook procedure, MouseProc.
         /// </summary>
         /// <remarks>
-        /// http://msdn.microsoft.com/library/default.asp?url=/library/en-us/winui/winui/windowsuserinterface/windowing/hooks/hookreference/hookstructures/cwpstruct.asp
+        /// https://learn.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-mousehookstruct
         /// </remarks>
         [StructLayout(LayoutKind.Sequential)]
         private class MouseHookStruct
@@ -64,6 +64,9 @@ namespace WindowsHooks
         /// <summary>
         /// The MSLLHOOKSTRUCT structure contains information about a low-level keyboard input event.
         /// </summary>
+        /// <remarks>
+        /// https://learn.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-msllhookstruct
+        /// </remarks>
         [StructLayout(LayoutKind.Sequential)]
         private class MouseLLHookStruct
         {
@@ -109,7 +112,7 @@ namespace WindowsHooks
         /// The KBDLLHOOKSTRUCT structure contains information about a low-level keyboard input event.
         /// </summary>
         /// <remarks>
-        /// http://msdn.microsoft.com/library/default.asp?url=/library/en-us/winui/winui/windowsuserinterface/windowing/hooks/hookreference/hookstructures/cwpstruct.asp
+        /// https://learn.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-kbdllhookstruct
         /// </remarks>
         [StructLayout(LayoutKind.Sequential)]
         private class KeyboardHookStruct
@@ -138,6 +141,7 @@ namespace WindowsHooks
         #endregion
 
         #region Windows function imports
+
         /// <summary>
         /// The SetWindowsHookEx function installs an application-defined hook procedure into a hook chain.
         /// You would install a hook procedure to monitor the system for certain types of events. These events
@@ -166,7 +170,7 @@ namespace WindowsHooks
         /// If the function fails, the return value is NULL. To get extended error information, call GetLastError.
         /// </returns>
         /// <remarks>
-        /// http://msdn.microsoft.com/library/default.asp?url=/library/en-us/winui/winui/windowsuserinterface/windowing/hooks/hookreference/hookfunctions/setwindowshookex.asp
+        /// https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-setwindowshookexa
         /// </remarks>
         [DllImport("user32.dll", CharSet = CharSet.Auto,
            CallingConvention = CallingConvention.StdCall, SetLastError = true)]
@@ -183,7 +187,7 @@ namespace WindowsHooks
         /// If the function fails, the return value is zero. To get extended error information, call GetLastError.
         /// </returns>
         /// <remarks>
-        /// http://msdn.microsoft.com/library/default.asp?url=/library/en-us/winui/winui/windowsuserinterface/windowing/hooks/hookreference/hookfunctions/setwindowshookex.asp
+        /// https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-unhookwindowshookex
         /// </remarks>
         [DllImport("user32.dll", CharSet = CharSet.Auto,
             CallingConvention = CallingConvention.StdCall, SetLastError = true)]
@@ -212,7 +216,7 @@ namespace WindowsHooks
         /// For more information, see the descriptions of the individual hook procedures.
         /// </returns>
         /// <remarks>
-        /// http://msdn.microsoft.com/library/default.asp?url=/library/en-us/winui/winui/windowsuserinterface/windowing/hooks/hookreference/hookfunctions/setwindowshookex.asp
+        /// https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-callnexthookex
         /// </remarks>
         [DllImport("user32.dll", CharSet = CharSet.Auto,
              CallingConvention = CallingConvention.StdCall)]
@@ -254,33 +258,56 @@ namespace WindowsHooks
         /// virtual key to form a single character.
         /// </returns>
         /// <remarks>
-        /// http://msdn.microsoft.com/library/default.asp?url=/library/en-us/winui/winui/windowsuserinterface/userinput/keyboardinput/keyboardinputreference/keyboardinputfunctions/toascii.asp
+        /// https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-toascii
         /// </remarks>
         [DllImport("user32")]
         private static extern int ToAscii(int uVirtKey, int uScanCode, byte[] lpbKeyState, byte[] lpwTransKey, int fuState);
 
         /// <summary>
-        /// The GetKeyboardState function copies the status of the 256 virtual keys to the
-        /// specified buffer.
+        /// Copies the status of the 256 virtual keys to the specified buffer.
         /// </summary>
         /// <param name="pbKeyState">
-        /// [in] Pointer to a 256-byte array that contains keyboard key states.
+        /// [out] The 256-byte array that receives the status data for each virtual key.
         /// </param>
         /// <returns>
         /// If the function succeeds, the return value is nonzero.
         /// If the function fails, the return value is zero. To get extended error information, call GetLastError.
         /// </returns>
         /// <remarks>
-        /// http://msdn.microsoft.com/library/default.asp?url=/library/en-us/winui/winui/windowsuserinterface/userinput/keyboardinput/keyboardinputreference/keyboardinputfunctions/toascii.asp
+        /// https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getkeyboardstate
         /// </remarks>
         [DllImport("user32")]
         private static extern int GetKeyboardState(byte[] pbKeyState);
 
+        /// <summary>
+        /// Retrieves the status of the specified virtual key. The status specifies whether the key is up, down, or toggled (on, off—alternating each time the key is pressed).
+        /// </summary>
+        /// <param name="nVirtKey">
+        /// [in] A virtual key. If the desired virtual key is a letter or digit (A through Z, a through z, or 0 through 9), nVirtKey must be set to the ASCII value of that character. For other keys, it must be a virtual-key code.
+        /// If a non-English keyboard layout is used, virtual keys with values in the range ASCII A through Z and 0 through 9 are used to specify most of the character keys. For example, for the German keyboard layout, the virtual key of value ASCII O (0x4F) refers to the "o" key, whereas VK_OEM_1 refers to the "o with umlaut" key.
+        /// </param>
+        /// <returns>
+        /// The return value specifies the status of the specified virtual key, as follows:
+        ///   - If the high-order bit is 1, the key is down; otherwise, it is up.
+        ///   - f the low-order bit is 1, the key is toggled. A key, such as the CAPS LOCK key, is toggled if it is turned on. The key is off and untoggled if the low-order bit is 0. A toggle key's indicator light (if any) on the keyboard will be on when the key is toggled, and off when the key is untoggled.
+        /// </returns>
+        /// <remarks>
+        /// https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-getkeystate
+        /// </remarks>
         [DllImport("user32.dll", CharSet = CharSet.Auto, CallingConvention = CallingConvention.StdCall)]
-        private static extern short GetKeyState(int vKey);
+        private static extern short GetKeyState(int nVirtKey);
 
+        /// <summary>
+        /// Retrieves the thread identifier of the calling thread.
+        /// </summary>
+        /// <returns>
+        /// TThe return value is the thread identifier of the calling thread.
+        /// </returns>
+        /// <remarks>
+        /// https://learn.microsoft.com/en-us/windows/win32/api/processthreadsapi/nf-processthreadsapi-getcurrentthreadid
+        /// </remarks>
         [DllImport("kernel32.dll")]
-        static extern uint GetCurrentThreadId();
+        private static extern uint GetCurrentThreadId();
 
         #endregion
 

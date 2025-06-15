@@ -46,26 +46,26 @@
             this.groupBoxLocal.SuspendLayout();
             this.groupBoxGlobal.SuspendLayout();
             this.SuspendLayout();
-            // 
+            //
             // splitContainer1
-            // 
+            //
             this.splitContainer1.Dock = System.Windows.Forms.DockStyle.Fill;
             this.splitContainer1.Location = new System.Drawing.Point(0, 0);
             this.splitContainer1.Name = "splitContainer1";
-            // 
+            //
             // splitContainer1.Panel1
-            // 
+            //
             this.splitContainer1.Panel1.Controls.Add(this.groupBoxLocal);
-            // 
+            //
             // splitContainer1.Panel2
-            // 
+            //
             this.splitContainer1.Panel2.Controls.Add(this.groupBoxGlobal);
             this.splitContainer1.Size = new System.Drawing.Size(721, 580);
             this.splitContainer1.SplitterDistance = 352;
             this.splitContainer1.TabIndex = 0;
-            // 
+            //
             // groupBoxLocal
-            // 
+            //
             this.groupBoxLocal.Controls.Add(this.textBoxLocalEvents);
             this.groupBoxLocal.Controls.Add(this.labelPosLocal);
             this.groupBoxLocal.Controls.Add(this.buttonStopLocal);
@@ -77,11 +77,11 @@
             this.groupBoxLocal.TabIndex = 0;
             this.groupBoxLocal.TabStop = false;
             this.groupBoxLocal.Text = "Local Hooks";
-            // 
+            //
             // textBoxLocalEvents
-            // 
-            this.textBoxLocalEvents.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
+            //
+            this.textBoxLocalEvents.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this.textBoxLocalEvents.Enabled = false;
             this.textBoxLocalEvents.Location = new System.Drawing.Point(6, 61);
@@ -89,18 +89,18 @@
             this.textBoxLocalEvents.Name = "textBoxLocalEvents";
             this.textBoxLocalEvents.Size = new System.Drawing.Size(343, 513);
             this.textBoxLocalEvents.TabIndex = 5;
-            // 
+            //
             // labelPosLocal
-            // 
+            //
             this.labelPosLocal.AutoSize = true;
             this.labelPosLocal.Location = new System.Drawing.Point(3, 45);
             this.labelPosLocal.Name = "labelPosLocal";
             this.labelPosLocal.Size = new System.Drawing.Size(108, 13);
             this.labelPosLocal.TabIndex = 3;
             this.labelPosLocal.Text = "Mouse Local Position";
-            // 
+            //
             // buttonStopLocal
-            // 
+            //
             this.buttonStopLocal.Location = new System.Drawing.Point(84, 19);
             this.buttonStopLocal.Name = "buttonStopLocal";
             this.buttonStopLocal.Size = new System.Drawing.Size(75, 23);
@@ -108,9 +108,9 @@
             this.buttonStopLocal.Text = "Stop";
             this.buttonStopLocal.UseVisualStyleBackColor = true;
             this.buttonStopLocal.Click += new System.EventHandler(this.buttonStopLocal_Click);
-            // 
+            //
             // buttonStartLocal
-            // 
+            //
             this.buttonStartLocal.Location = new System.Drawing.Point(3, 19);
             this.buttonStartLocal.Name = "buttonStartLocal";
             this.buttonStartLocal.Size = new System.Drawing.Size(75, 23);
@@ -118,9 +118,9 @@
             this.buttonStartLocal.Text = "Start";
             this.buttonStartLocal.UseVisualStyleBackColor = true;
             this.buttonStartLocal.Click += new System.EventHandler(this.buttonStartLocal_Click);
-            // 
+            //
             // groupBoxGlobal
-            // 
+            //
             this.groupBoxGlobal.Controls.Add(this.textBoxGlobalEvents);
             this.groupBoxGlobal.Controls.Add(this.labelPosGlobal);
             this.groupBoxGlobal.Controls.Add(this.buttonStopGlobal);
@@ -132,11 +132,11 @@
             this.groupBoxGlobal.TabIndex = 0;
             this.groupBoxGlobal.TabStop = false;
             this.groupBoxGlobal.Text = "Global Hooks";
-            // 
+            //
             // textBoxGlobalEvents
-            // 
-            this.textBoxGlobalEvents.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
+            //
+            this.textBoxGlobalEvents.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom)
+            | System.Windows.Forms.AnchorStyles.Left)
             | System.Windows.Forms.AnchorStyles.Right)));
             this.textBoxGlobalEvents.Enabled = false;
             this.textBoxGlobalEvents.Location = new System.Drawing.Point(3, 61);
@@ -144,18 +144,18 @@
             this.textBoxGlobalEvents.Name = "textBoxGlobalEvents";
             this.textBoxGlobalEvents.Size = new System.Drawing.Size(356, 513);
             this.textBoxGlobalEvents.TabIndex = 6;
-            // 
+            //
             // labelPosGlobal
-            // 
+            //
             this.labelPosGlobal.AutoSize = true;
             this.labelPosGlobal.Location = new System.Drawing.Point(0, 45);
             this.labelPosGlobal.Name = "labelPosGlobal";
             this.labelPosGlobal.Size = new System.Drawing.Size(112, 13);
             this.labelPosGlobal.TabIndex = 4;
             this.labelPosGlobal.Text = "Mouse Global Position";
-            // 
+            //
             // buttonStopGlobal
-            // 
+            //
             this.buttonStopGlobal.Location = new System.Drawing.Point(84, 19);
             this.buttonStopGlobal.Name = "buttonStopGlobal";
             this.buttonStopGlobal.Size = new System.Drawing.Size(75, 23);
@@ -163,9 +163,9 @@
             this.buttonStopGlobal.Text = "Stop";
             this.buttonStopGlobal.UseVisualStyleBackColor = true;
             this.buttonStopGlobal.Click += new System.EventHandler(this.buttonStopGlobal_Click);
-            // 
+            //
             // buttonStartGlobal
-            // 
+            //
             this.buttonStartGlobal.Location = new System.Drawing.Point(3, 19);
             this.buttonStartGlobal.Name = "buttonStartGlobal";
             this.buttonStartGlobal.Size = new System.Drawing.Size(75, 23);
@@ -173,9 +173,9 @@
             this.buttonStartGlobal.Text = "Start";
             this.buttonStartGlobal.UseVisualStyleBackColor = true;
             this.buttonStartGlobal.Click += new System.EventHandler(this.buttonStartGlobal_Click);
-            // 
+            //
             // HooksForm
-            // 
+            //
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(721, 580);

@@ -8,8 +8,8 @@ using System.Windows.Forms;
 namespace WindowsHooks
 {
     /// <summary>
-    /// This class allows you to tap keyboard and mouse and / or to detect their activity even when an 
-    /// application runes in background or does not have any user interface at all. This class raises 
+    /// This class allows you to tap keyboard and mouse and / or to detect their activity even when an
+    /// application runes in background or does not have any user interface at all. This class raises
     /// common .NET events with KeyEventArgs and MouseEventArgs so you can easily retrive any information you need.
     /// </summary>
     partial class Hooks
@@ -21,7 +21,7 @@ namespace WindowsHooks
         private readonly bool isGlobalHook = true;
 
         /// The following delegates are explicitly declared
-        /// to protect passed funvtions to unmanaged code from 
+        /// to protect passed funvtions to unmanaged code from
         /// garbage collecting
         /// <summary>
         /// Declare MouseHookProcedure as HookProc type.
@@ -49,7 +49,7 @@ namespace WindowsHooks
             //uninstall hooks and do not throw exceptions
             Stop(true, true, false);
         }
-        
+
 
         #region Event handlers
 
@@ -62,7 +62,7 @@ namespace WindowsHooks
         /// </summary>
         public event KeyEventHandler KeyDown;
         /// <summary>
-        /// Occurs when the user presses and releases 
+        /// Occurs when the user presses and releases
         /// </summary>
         public event KeyPressEventHandler KeyPress;
         /// <summary>
@@ -101,15 +101,15 @@ namespace WindowsHooks
                     isGlobalHook ? WH_MOUSE_LL : WH_MOUSE,
                     MouseHookProcedure = MouseHookProc,
                     isGlobalHook ? Marshal.GetHINSTANCE(Assembly.GetExecutingAssembly().GetModules()[0]) : IntPtr.Zero,
-                    isGlobalHook ? 0 : AppDomain.GetCurrentThreadId());
+                    isGlobalHook ? 0 : GetCurrentThreadId());
                 //If SetWindowsHookEx fails.
                 if (hMouseHook == 0)
                 {
-                    //Returns the error code returned by the last unmanaged function called using platform invoke that has the DllImportAttribute.SetLastError flag set. 
+                    //Returns the error code returned by the last unmanaged function called using platform invoke that has the DllImportAttribute.SetLastError flag set.
                     int errorCode = Marshal.GetLastWin32Error();
                     //do cleanup
                     Stop(true, false, false);
-                    //Initializes and throws a new instance of the Win32Exception class with the specified error. 
+                    //Initializes and throws a new instance of the Win32Exception class with the specified error.
                     throw new Win32Exception(errorCode);
                 }
             }
@@ -122,15 +122,15 @@ namespace WindowsHooks
                     isGlobalHook ? WH_KEYBOARD_LL : WH_KEYBOARD,
                     KeyboardHookProcedure = KeyboardHookProc,
                     isGlobalHook ? Marshal.GetHINSTANCE(Assembly.GetExecutingAssembly().GetModules()[0]) : IntPtr.Zero,
-                    isGlobalHook ? 0 : AppDomain.GetCurrentThreadId());
+                    isGlobalHook ? 0 : GetCurrentThreadId());
                 //If SetWindowsHookEx fails.
                 if (hKeyboardHook == 0)
                 {
-                    //Returns the error code returned by the last unmanaged function called using platform invoke that has the DllImportAttribute.SetLastError flag set. 
+                    //Returns the error code returned by the last unmanaged function called using platform invoke that has the DllImportAttribute.SetLastError flag set.
                     int errorCode = Marshal.GetLastWin32Error();
                     //do cleanup
                     Stop(false, true, false);
-                    //Initializes and throws a new instance of the Win32Exception class with the specified error. 
+                    //Initializes and throws a new instance of the Win32Exception class with the specified error.
                     throw new Win32Exception(errorCode);
                 }
             }
@@ -164,9 +164,9 @@ namespace WindowsHooks
                 //if failed and exception must be thrown
                 if (retMouse == 0 && ThrowExceptions)
                 {
-                    //Returns the error code returned by the last unmanaged function called using platform invoke that has the DllImportAttribute.SetLastError flag set. 
+                    //Returns the error code returned by the last unmanaged function called using platform invoke that has the DllImportAttribute.SetLastError flag set.
                     int errorCode = Marshal.GetLastWin32Error();
-                    //Initializes and throws a new instance of the Win32Exception class with the specified error. 
+                    //Initializes and throws a new instance of the Win32Exception class with the specified error.
                     throw new Win32Exception(errorCode);
                 }
             }
@@ -181,9 +181,9 @@ namespace WindowsHooks
                 //if failed and exception must be thrown
                 if (retKeyboard == 0 && ThrowExceptions)
                 {
-                    //Returns the error code returned by the last unmanaged function called using platform invoke that has the DllImportAttribute.SetLastError flag set. 
+                    //Returns the error code returned by the last unmanaged function called using platform invoke that has the DllImportAttribute.SetLastError flag set.
                     int errorCode = Marshal.GetLastWin32Error();
-                    //Initializes and throws a new instance of the Win32Exception class with the specified error. 
+                    //Initializes and throws a new instance of the Win32Exception class with the specified error.
                     throw new Win32Exception(errorCode);
                 }
             }

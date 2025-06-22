@@ -107,7 +107,7 @@
             this.buttonStopLocal.TabIndex = 1;
             this.buttonStopLocal.Text = "Stop";
             this.buttonStopLocal.UseVisualStyleBackColor = true;
-            this.buttonStopLocal.Click += new System.EventHandler(this.buttonStopLocal_Click);
+            this.buttonStopLocal.Click += new System.EventHandler(this.ButtonStopLocal_Click);
             //
             // buttonStartLocal
             //
@@ -117,7 +117,7 @@
             this.buttonStartLocal.TabIndex = 0;
             this.buttonStartLocal.Text = "Start";
             this.buttonStartLocal.UseVisualStyleBackColor = true;
-            this.buttonStartLocal.Click += new System.EventHandler(this.buttonStartLocal_Click);
+            this.buttonStartLocal.Click += new System.EventHandler(this.ButtonStartLocal_Click);
             //
             // groupBoxGlobal
             //
@@ -162,7 +162,7 @@
             this.buttonStopGlobal.TabIndex = 2;
             this.buttonStopGlobal.Text = "Stop";
             this.buttonStopGlobal.UseVisualStyleBackColor = true;
-            this.buttonStopGlobal.Click += new System.EventHandler(this.buttonStopGlobal_Click);
+            this.buttonStopGlobal.Click += new System.EventHandler(this.ButtonStopGlobal_Click);
             //
             // buttonStartGlobal
             //
@@ -172,7 +172,7 @@
             this.buttonStartGlobal.TabIndex = 1;
             this.buttonStartGlobal.Text = "Start";
             this.buttonStartGlobal.UseVisualStyleBackColor = true;
-            this.buttonStartGlobal.Click += new System.EventHandler(this.buttonStartGlobal_Click);
+            this.buttonStartGlobal.Click += new System.EventHandler(this.ButtonStartGlobal_Click);
             //
             // HooksForm
             //

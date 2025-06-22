@@ -2,7 +2,6 @@
 using System.ComponentModel;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using System.Windows.Forms;
 
 
 namespace WindowsHooks
@@ -12,34 +11,14 @@ namespace WindowsHooks
     /// application runes in background or does not have any user interface at all. This class raises
     /// common .NET events with KeyEventArgs and MouseEventArgs so you can easily retrive any information you need.
     /// </summary>
-    partial class Hooks
+    /// <param name="isGlobalHook">Specifies hook type (global/local)</param>
+    partial class Hooks(bool isGlobalHook)
     {
         /// <summary>
         /// Specifies if the hook is global (monitors the entire system)
         /// or local (only the events triggered on the current thread)
         /// </summary>
-        private readonly bool isGlobalHook = true;
-
-        /// The following delegates are explicitly declared
-        /// to protect passed funvtions to unmanaged code from
-        /// garbage collecting
-        /// <summary>
-        /// Declare MouseHookProcedure as HookProc type.
-        /// </summary>
-        private static HookProc MouseHookProcedure;
-        /// <summary>
-        /// Declare KeyboardHookProcedure as HookProc type.
-        /// </summary>
-        private static HookProc KeyboardHookProcedure;
-
-        /// <summary>
-        /// Constructor
-        /// </summary>
-        /// <param name="isGlobalHook">Specifies hook type (global/local)</param>
-        public Hooks(bool isGlobalHook)
-        {
-            this.isGlobalHook = isGlobalHook;
-        }
+        private readonly bool isGlobalHook = isGlobalHook;
 
         /// <summary>
         /// Destruction.
@@ -56,19 +35,11 @@ namespace WindowsHooks
         /// <summary>
         /// Occurs when the user moves the mouse, presses any mouse button or scrolls the wheel
         /// </summary>
-        public event MouseEventHandler OnMouseActivity;
+        public event MouseEventHandler OnMouseEvent;
         /// <summary>
-        /// Occurs when the user presses a key
+        /// Occurs when the user presses or releases a keyboard button
         /// </summary>
-        public event KeyEventHandler KeyDown;
-        /// <summary>
-        /// Occurs when the user presses and releases
-        /// </summary>
-        public event KeyPressEventHandler KeyPress;
-        /// <summary>
-        /// Occurs when the user releases a key
-        /// </summary>
-        public event KeyEventHandler KeyUp;
+        public event KeyboardEventHandler OnKeyboardEvent;
 
         #endregion
 
@@ -99,7 +70,7 @@ namespace WindowsHooks
                 //install hook
                 hMouseHook = SetWindowsHookEx(
                     isGlobalHook ? WH_MOUSE_LL : WH_MOUSE,
-                    MouseHookProcedure = MouseHookProc,
+                    isGlobalHook ? LowLevelMouseProc : MouseProc,
                     isGlobalHook ? Marshal.GetHINSTANCE(Assembly.GetExecutingAssembly().GetModules()[0]) : IntPtr.Zero,
                     isGlobalHook ? 0 : GetCurrentThreadId());
                 //If SetWindowsHookEx fails.
@@ -120,7 +91,7 @@ namespace WindowsHooks
                 //install hook
                 hKeyboardHook = SetWindowsHookEx(
                     isGlobalHook ? WH_KEYBOARD_LL : WH_KEYBOARD,
-                    KeyboardHookProcedure = KeyboardHookProc,
+                    isGlobalHook ? LowLevelKeyboardHookProc : KeyboardHookProc,
                     isGlobalHook ? Marshal.GetHINSTANCE(Assembly.GetExecutingAssembly().GetModules()[0]) : IntPtr.Zero,
                     isGlobalHook ? 0 : GetCurrentThreadId());
                 //If SetWindowsHookEx fails.

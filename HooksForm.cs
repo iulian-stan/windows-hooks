@@ -13,30 +13,69 @@ namespace WindowsHooks
             InitializeComponent();
         }
 
-        private void buttonStartGlobal_Click(object sender, System.EventArgs e)
+        private void ButtonStartGlobal_Click(object sender, EventArgs e)
         {
             GlobalHook.SetHook(true, true);
         }
 
-        private void buttonStopGlobal_Click(object sender, System.EventArgs e)
+        private void ButtonStopGlobal_Click(object sender, EventArgs e)
         {
             GlobalHook.UnHook();
         }
 
-        private void buttonStartLocal_Click(object sender, System.EventArgs e)
+        private void ButtonStartLocal_Click(object sender, EventArgs e)
         {
             LocalHook.SetHook(true, true);
         }
 
-        private void buttonStopLocal_Click(object sender, System.EventArgs e)
+        private void ButtonStopLocal_Click(object sender, EventArgs e)
         {
             LocalHook.UnHook();
         }
 
-        public void GlobalMouseMoved(object sender, MouseEventArgs e)
+        public void GlobalMouseEventHandler(object sender, MouseEventArgs e)
         {
-            labelPosGlobal.Text = String.Format("x={0}  y={1} wheel={2}", e.X, e.Y, e.Delta);
-            if (e.Clicks > 0) GlobalLogWrite("MouseButton\t- " + e.Button);
+            switch (e.Type)
+            {
+                case MouseEvents.Unknown:
+                    //TODO: Event handler not implemented
+                    break;
+                case MouseEvents.Click:
+                    GlobalLogWrite("Click\t\t- " + e.Button);
+                    break;
+                case MouseEvents.DoubleClick:
+                    GlobalLogWrite("DoubleClick\t- " + e.Button);
+                    break;
+                case MouseEvents.Down:
+                    GlobalLogWrite("ButtonDown\t- " + e.Button);
+                    break;
+                case MouseEvents.Up:
+                    GlobalLogWrite("ButtonUp\t\t- " + e.Button);
+                    break;
+                case MouseEvents.Move:
+                case MouseEvents.Wheel:
+                    labelPosGlobal.Text = string.Format("x={0}  y={1} wheel={2}", e.X, e.Y, e.Delta);
+                    break;        
+            }
+        }
+
+        public void GlobalKeyboardEventHandler(object sender, KeyboardEventArgs e)
+        {
+            switch (e.Type)
+            {
+                case KeyboardEvents.Unknown:
+                    //TODO: Event handler not implemented
+                    break;
+                case KeyboardEvents.KeyDown:
+                    GlobalLogWrite("KeyDown\t\t- " + e.Key);
+                    break;
+                case KeyboardEvents.KeyPress:
+                    GlobalLogWrite("KeyPress\t\t- " + e.Key);
+                    break;
+                case KeyboardEvents.KeyUp:
+                    GlobalLogWrite("KeyUp\t\t- " + e.Key);
+                    break;
+            }
         }
 
         public void GlobalMyKeyDown(object sender, KeyEventArgs e)
@@ -45,9 +84,9 @@ namespace WindowsHooks
             e.Handled = true;
         }
 
-        public void GlobalMyKeyPress(object sender, KeyPressEventArgs e)
+        public void GlobalMyKeyPress(object sender, KeyEventArgs e)
         {
-            GlobalLogWrite("KeyPress\t\t- " + e.KeyChar);
+            GlobalLogWrite("KeyPress\t\t- " + e.KeyData);
         }
 
         public void GlobalMyKeyUp(object sender, KeyEventArgs e)
@@ -61,48 +100,67 @@ namespace WindowsHooks
             textBoxGlobalEvents.SelectionStart = textBoxGlobalEvents.Text.Length;
         }
 
-        public void LocalMouseMoved(object sender, MouseEventArgs e)
+        public void LocalMouseEventHandler(object sender, MouseEventArgs e)
         {
-            labelPosLocal.Text = String.Format("x={0}  y={1} wheel={2}", e.X, e.Y, e.Delta);
-            if (e.Clicks > 0) LocalLogWrite("MouseButton\t- " + e.Button);
+            switch (e.Type)
+            {
+                case MouseEvents.Unknown:
+                    //TODO: Event handler not implemented
+                    break;
+                case MouseEvents.Click:
+                    LocalLogWrite("Click\t\t- " + e.Button);
+                    break;
+                case MouseEvents.DoubleClick:
+                    LocalLogWrite("DoubleClick\t- " + e.Button);
+                    break;
+                case MouseEvents.Down:
+                    LocalLogWrite("ButtonDown\t- " + e.Button);
+                    break;
+                case MouseEvents.Up:
+                    LocalLogWrite("ButtonUp\t\t- " + e.Button);
+                    break;
+                case MouseEvents.Move:
+                case MouseEvents.Wheel:
+                    labelPosLocal.Text = string.Format("x={0}  y={1} wheel={2}", e.X, e.Y, e.Delta);
+                    break;
+            }
         }
 
-        public void LocalMyKeyDown(object sender, KeyEventArgs e)
+        public void LocalKeyboardEventHandler(object sender, KeyboardEventArgs e)
         {
-            LocalLogWrite("KeyDown\t\t- " + e.KeyData);
-            e.Handled = true;
-        }
-
-        public void LocalMyKeyPress(object sender, KeyPressEventArgs e)
-        {
-            LocalLogWrite("KeyPress\t\t- " + e.KeyChar);
-        }
-
-        public void LocalMyKeyUp(object sender, KeyEventArgs e)
-        {
-            LocalLogWrite("KeyUp\t\t- " + e.KeyData);
+            switch (e.Type)
+            {
+                case KeyboardEvents.Unknown:
+                    //TODO: Event handler not implemented
+                    break;
+                case KeyboardEvents.KeyDown:
+                    LocalLogWrite("KeyDown\t\t- " + e.Key);
+                    break;
+                case KeyboardEvents.KeyPress:
+                    LocalLogWrite("KeyPress\t\t- " + e.Key);
+                    break;
+                case KeyboardEvents.KeyUp:
+                    LocalLogWrite("KeyUp\t\t- " + e.Key);
+                    break;
+            }
         }
 
         private void LocalLogWrite(string txt)
         {
-            textBoxLocalEvents.AppendText(txt + Environment.NewLine);
+            textBoxLocalEvents.AppendText(txt + System.Environment.NewLine);
             textBoxLocalEvents.SelectionStart = textBoxLocalEvents.Text.Length;
         }
 
-        private void HooksForm_Load(object sender, EventArgs e)
+        private void HooksForm_Load(object sender, System.EventArgs e)
         {
             GlobalHook = new Hooks(true);
             LocalHook = new Hooks(false);
 
-            GlobalHook.OnMouseActivity += GlobalMouseMoved;
-            GlobalHook.KeyDown += GlobalMyKeyDown;
-            GlobalHook.KeyPress += GlobalMyKeyPress;
-            GlobalHook.KeyUp += GlobalMyKeyUp;
+            GlobalHook.OnMouseEvent += GlobalMouseEventHandler;
+            GlobalHook.OnKeyboardEvent += GlobalKeyboardEventHandler;
 
-            LocalHook.OnMouseActivity += LocalMouseMoved;
-            LocalHook.KeyDown += LocalMyKeyDown;
-            LocalHook.KeyPress += LocalMyKeyPress;
-            LocalHook.KeyUp += LocalMyKeyUp;
+            LocalHook.OnMouseEvent += LocalMouseEventHandler;
+            LocalHook.OnKeyboardEvent += LocalKeyboardEventHandler;
         }
     }
 }

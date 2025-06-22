@@ -1,5 +1,7 @@
 ﻿using System;
 using System.ComponentModel;
+using System.Diagnostics.Tracing;
+using System.Net.NetworkInformation;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Windows.Forms;
@@ -13,6 +15,119 @@ namespace WindowsHooks
     /// </summary>
     partial class Hooks
     {
+        #region Windows constants
+
+        /// <summary>
+        /// Installs a hook procedure that monitors keystroke messages. For more information, see the KeyboardProc hook procedure.
+        /// </summary>
+        private const int WH_KEYBOARD = 2;
+        /// <summary>
+        /// Installs a hook procedure that monitors mouse messages. For more information, see the MouseProc hook procedure.
+        /// </summary>
+        private const int WH_MOUSE = 7;
+        /// <summary>
+        /// Windows NT/2000/XP: Installs a hook procedure that monitors low-level keyboard  input events.
+        /// Cannot be set locally.
+        /// </summary>
+        private const int WH_KEYBOARD_LL = 13;
+        /// <summary>
+        /// Windows NT/2000/XP: Installs a hook procedure that monitors low-level mouse input events.
+        /// Cannot be set locally.
+        /// </summary>
+        private const int WH_MOUSE_LL = 14;
+
+        /// <summary>
+        /// The WM_MOUSEMOVE message is posted to a window when the cursor moves.
+        /// </summary>
+        private const int WM_MOUSEMOVE = 0x200;
+        /// <summary>
+        /// The WM_LBUTTONDOWN message is posted when the user presses the left mouse button.
+        /// </summary>
+        private const int WM_LBUTTONDOWN = 0x201;
+        /// <summary>
+        /// The WM_LBUTTONUP message is posted when the user releases the left mouse button.
+        /// </summary>
+        private const int WM_LBUTTONUP = 0x202;
+        /// <summary>
+        /// The WM_LBUTTONDBLCLK message is posted when the user double-clicks the left mouse button.
+        /// </summary>
+        private const int WM_LBUTTONDBLCLK = 0x203;
+        /// <summary>
+        /// The WM_RBUTTONDOWN message is posted when the user presses the right mouse button.
+        /// </summary>
+        private const int WM_RBUTTONDOWN = 0x204;
+        /// <summary>
+        /// The WM_RBUTTONUP message is posted when the user releases the right mouse button.
+        /// </summary>
+        private const int WM_RBUTTONUP = 0x205;
+        /// <summary>
+        /// The WM_RBUTTONDBLCLK message is posted when the user double-clicks the right mouse button.
+        /// </summary>
+        private const int WM_RBUTTONDBLCLK = 0x206;
+        /// <summary>
+        /// The WM_MBUTTONDOWN message is posted when the user presses the middle mouse button.
+        /// </summary>
+        private const int WM_MBUTTONDOWN = 0x207;
+        /// <summary>
+        /// The WM_MBUTTONUP message is posted when the user releases the middle mouse button.
+        /// </summary>
+        private const int WM_MBUTTONUP = 0x208;
+        /// <summary>
+        /// The WM_RBUTTONDOWN message is posted when the user presses the right mouse button.
+        /// </summary>
+        private const int WM_MBUTTONDBLCLK = 0x209;
+        /// <summary>
+        /// The WM_MOUSEWHEEL message is posted when the user presses the mouse wheel.
+        /// </summary>
+        private const int WM_MOUSEWHEEL = 0x020A;
+        /// <summary>
+        /// The WM_XBUTTONDOWN message is posted when the user presses the middle mouse button.
+        /// </summary>
+        private const int WM_XBUTTONDOWN = 0x20B;
+        /// <summary>
+        /// The WM_XBUTTONUP message is posted when the user releases one of the X mouse buttons.
+        /// </summary>
+        private const int WM_XBUTTONUP = 0x20C;
+        /// <summary>
+        /// The WM_XBUTTONDBLCLK message is posted when the user double-clicks of the X mouse buttons.
+        /// </summary>
+        private const int WM_XBUTTONDBLCLK = 0x020D;
+
+        /// <summary>
+        /// The WM_KEYDOWN message is posted to the window with the keyboard focus when a nonsystem
+        /// key is pressed. A nonsystem key is a key that is pressed when the ALT key is not pressed.
+        /// </summary>
+        private const int WM_KEYDOWN = 0x100;
+        /// <summary>
+        /// The WM_KEYUP message is posted to the window with the keyboard focus when a nonsystem
+        /// key is released. A nonsystem key is a key that is pressed when the ALT key is not pressed,
+        /// or a keyboard key that is pressed when a window has the keyboard focus.
+        /// </summary>
+        private const int WM_KEYUP = 0x101;
+        /// <summary>
+        /// The WM_SYSKEYDOWN message is posted to the window with the keyboard focus when the user
+        /// presses the F10 key (which activates the menu bar) or holds down the ALT key and then
+        /// presses another key. It also occurs when no window currently has the keyboard focus;
+        /// in this case, the WM_SYSKEYDOWN message is sent to the active window. The window that
+        /// receives the message can distinguish between these two contexts by checking the context
+        /// code in the lParam parameter.
+        /// </summary>
+        private const int WM_SYSKEYDOWN = 0x104;
+        /// <summary>
+        /// The WM_SYSKEYUP message is posted to the window with the keyboard focus when the user
+        /// releases a key that was pressed while the ALT key was held down. It also occurs when no
+        /// window currently has the keyboard focus; in this case, the WM_SYSKEYUP message is sent
+        /// to the active window. The window that receives the message can distinguish between
+        /// these two contexts by checking the context code in the lParam parameter.
+        /// </summary>
+        private const int WM_SYSKEYUP = 0x105;
+
+        private const byte VK_SHIFT = 0x10;
+        private const byte VK_CAPITAL = 0x14;
+        private const byte VK_NUMLOCK = 0x90;
+
+        #endregion
+
         #region Windows structure definitions
 
         /// <summary>
@@ -35,30 +150,62 @@ namespace WindowsHooks
         }
 
         /// <summary>
-        /// The MOUSEHOOKSTRUCT structure contains information about a mouse event passed to a WH_MOUSE hook procedure, MouseProc.
+        /// Contains information about a mouse event passed to a WH_MOUSE hook procedure, MouseProc.
         /// </summary>
         /// <remarks>
-        /// https://learn.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-mousehookstruct
+        /// https://learn.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-mousehookstructex
         /// </remarks>
         [StructLayout(LayoutKind.Sequential)]
-        private class MouseHookStruct
+        private class MouseHookStructEx
         {
             /// <summary>
-            /// Specifies a POINT structure that contains the x- and y-coordinates of the cursor, in screen coordinates.
+            /// The x- and y-coordinates of the cursor, in screen coordinates.
             /// </summary>
             public POINT pt;
             /// <summary>
-            /// Handle to the window that will receive the mouse message corresponding to the mouse event.
+            /// A handle to the window that will receive the mouse message corresponding to the mouse event.
             /// </summary>
-            public int hwnd;
+            public IntPtr hwnd;
             /// <summary>
-            /// Specifies the hit-test value. For a list of hit-test values, see the description of the WM_NCHITTEST message.
+            /// The hit-test value. For a list of hit-test values, see the description of the WM_NCHITTEST message.
             /// </summary>
-            public int wHitTestCode;
+            public uint wHitTestCode;
+            /// <summary>
+            /// Additional information associated with the message.
+            /// </summary>
+            public UIntPtr dwExtraInfo;
+            public uint mouseData;
+        }
+
+        /// <summary>
+        /// Contains information about a low-level keyboard input event.
+        /// </summary>
+        /// <remarks>
+        /// https://learn.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-kbdllhookstruct
+        /// </remarks>
+        [StructLayout(LayoutKind.Sequential)]
+        private class LowLevelKeyboardHookStruct
+        {
+            /// <summary>
+            /// Specifies a virtual-key code. The code must be a value in the range 1 to 254.
+            /// </summary>
+            public uint vkCode;
+            /// <summary>
+            /// Specifies a hardware scan code for the key.
+            /// </summary>
+            public uint scanCode;
+            /// <summary>
+            /// Specifies the extended-key flag, event-injected flag, context code, and transition-state flag.
+            /// </summary>
+            public uint flags;
+            /// <summary>
+            /// Specifies the time stamp for this message.
+            /// </summary>
+            public uint time;
             /// <summary>
             /// Specifies extra information associated with the message.
             /// </summary>
-            public int dwExtraInfo;
+            public UIntPtr dwExtraInfo;
         }
 
         /// <summary>
@@ -87,7 +234,7 @@ namespace WindowsHooks
             ///XBUTTON2
             ///The second X button was pressed or released.
             /// </summary>
-            public int mouseData;
+            public uint mouseData;
             /// <summary>
             /// Specifies the event-injected flag. An application can use the following value to test the mouse flags. Value Purpose
             ///LLMHF_INJECTED Test the event-injected flag.
@@ -96,48 +243,17 @@ namespace WindowsHooks
             ///1-15
             ///Reserved.
             /// </summary>
-            public int flags;
+            public uint flags;
             /// <summary>
             /// Specifies the time stamp for this message.
             /// </summary>
-            public int time;
+            public uint time;
             /// <summary>
             /// Specifies extra information associated with the message.
             /// </summary>
-            public int dwExtraInfo;
+            public UIntPtr dwExtraInfo;
         }
 
-
-        /// <summary>
-        /// The KBDLLHOOKSTRUCT structure contains information about a low-level keyboard input event.
-        /// </summary>
-        /// <remarks>
-        /// https://learn.microsoft.com/en-us/windows/win32/api/winuser/ns-winuser-kbdllhookstruct
-        /// </remarks>
-        [StructLayout(LayoutKind.Sequential)]
-        private class KeyboardHookStruct
-        {
-            /// <summary>
-            /// Specifies a virtual-key code. The code must be a value in the range 1 to 254.
-            /// </summary>
-            public int vkCode;
-            /// <summary>
-            /// Specifies a hardware scan code for the key.
-            /// </summary>
-            public int scanCode;
-            /// <summary>
-            /// Specifies the extended-key flag, event-injected flag, context code, and transition-state flag.
-            /// </summary>
-            public int flags;
-            /// <summary>
-            /// Specifies the time stamp for this message.
-            /// </summary>
-            public int time;
-            /// <summary>
-            /// Specifies extra information associated with the message.
-            /// </summary>
-            public int dwExtraInfo;
-        }
         #endregion
 
         #region Windows function imports
@@ -220,7 +336,7 @@ namespace WindowsHooks
         /// </remarks>
         [DllImport("user32.dll", CharSet = CharSet.Auto,
              CallingConvention = CallingConvention.StdCall)]
-        private static extern int CallNextHookEx(int idHook, int nCode, int wParam, IntPtr lParam);
+        private static extern int CallNextHookEx(int idHook, int nCode, UIntPtr wParam, IntPtr lParam);
 
         /// <summary>
         /// The ToAscii function translates the specified virtual-key code and keyboard
@@ -261,7 +377,7 @@ namespace WindowsHooks
         /// https://learn.microsoft.com/en-us/windows/win32/api/winuser/nf-winuser-toascii
         /// </remarks>
         [DllImport("user32")]
-        private static extern int ToAscii(int uVirtKey, int uScanCode, byte[] lpbKeyState, byte[] lpwTransKey, int fuState);
+        private static extern int ToAscii(uint uVirtKey, uint uScanCode, byte[] lpbKeyState, byte[] lpwTransKey, uint fuState);
 
         /// <summary>
         /// Copies the status of the 256 virtual keys to the specified buffer.
@@ -311,107 +427,6 @@ namespace WindowsHooks
 
         #endregion
 
-        #region Windows constants
-
-        //values from Winuser.h in Microsoft SDK.
-        /// <summary>
-        /// Windows NT/2000/XP: Installs a hook procedure that monitors low-level mouse input events.
-        /// </summary>
-        private const int WH_MOUSE_LL = 14;
-        /// <summary>
-        /// Windows NT/2000/XP: Installs a hook procedure that monitors low-level keyboard  input events.
-        /// </summary>
-        private const int WH_KEYBOARD_LL = 13;
-
-        /// <summary>
-        /// Installs a hook procedure that monitors mouse messages. For more information, see the MouseProc hook procedure.
-        /// </summary>
-        private const int WH_MOUSE = 7;
-        /// <summary>
-        /// Installs a hook procedure that monitors keystroke messages. For more information, see the KeyboardProc hook procedure.
-        /// </summary>
-        private const int WH_KEYBOARD = 2;
-
-        /// <summary>
-        /// The WM_MOUSEMOVE message is posted to a window when the cursor moves.
-        /// </summary>
-        private const int WM_MOUSEMOVE = 0x200;
-        /// <summary>
-        /// The WM_LBUTTONDOWN message is posted when the user presses the left mouse button
-        /// </summary>
-        private const int WM_LBUTTONDOWN = 0x201;
-        /// <summary>
-        /// The WM_RBUTTONDOWN message is posted when the user presses the right mouse button
-        /// </summary>
-        private const int WM_RBUTTONDOWN = 0x204;
-        /// <summary>
-        /// The WM_MBUTTONDOWN message is posted when the user presses the middle mouse button
-        /// </summary>
-        private const int WM_MBUTTONDOWN = 0x207;
-        /// <summary>
-        /// The WM_LBUTTONUP message is posted when the user releases the left mouse button
-        /// </summary>
-        private const int WM_LBUTTONUP = 0x202;
-        /// <summary>
-        /// The WM_RBUTTONUP message is posted when the user releases the right mouse button
-        /// </summary>
-        private const int WM_RBUTTONUP = 0x205;
-        /// <summary>
-        /// The WM_MBUTTONUP message is posted when the user releases the middle mouse button
-        /// </summary>
-        private const int WM_MBUTTONUP = 0x208;
-        /// <summary>
-        /// The WM_LBUTTONDBLCLK message is posted when the user double-clicks the left mouse button
-        /// </summary>
-        private const int WM_LBUTTONDBLCLK = 0x203;
-        /// <summary>
-        /// The WM_RBUTTONDBLCLK message is posted when the user double-clicks the right mouse button
-        /// </summary>
-        private const int WM_RBUTTONDBLCLK = 0x206;
-        /// <summary>
-        /// The WM_RBUTTONDOWN message is posted when the user presses the right mouse button
-        /// </summary>
-        private const int WM_MBUTTONDBLCLK = 0x209;
-        /// <summary>
-        /// The WM_MOUSEWHEEL message is posted when the user presses the mouse wheel.
-        /// </summary>
-        private const int WM_MOUSEWHEEL = 0x020A;
-
-        /// <summary>
-        /// The WM_KEYDOWN message is posted to the window with the keyboard focus when a nonsystem
-        /// key is pressed. A nonsystem key is a key that is pressed when the ALT key is not pressed.
-        /// </summary>
-        private const int WM_KEYDOWN = 0x100;
-        /// <summary>
-        /// The WM_KEYUP message is posted to the window with the keyboard focus when a nonsystem
-        /// key is released. A nonsystem key is a key that is pressed when the ALT key is not pressed,
-        /// or a keyboard key that is pressed when a window has the keyboard focus.
-        /// </summary>
-        private const int WM_KEYUP = 0x101;
-        /// <summary>
-        /// The WM_SYSKEYDOWN message is posted to the window with the keyboard focus when the user
-        /// presses the F10 key (which activates the menu bar) or holds down the ALT key and then
-        /// presses another key. It also occurs when no window currently has the keyboard focus;
-        /// in this case, the WM_SYSKEYDOWN message is sent to the active window. The window that
-        /// receives the message can distinguish between these two contexts by checking the context
-        /// code in the lParam parameter.
-        /// </summary>
-        private const int WM_SYSKEYDOWN = 0x104;
-        /// <summary>
-        /// The WM_SYSKEYUP message is posted to the window with the keyboard focus when the user
-        /// releases a key that was pressed while the ALT key was held down. It also occurs when no
-        /// window currently has the keyboard focus; in this case, the WM_SYSKEYUP message is sent
-        /// to the active window. The window that receives the message can distinguish between
-        /// these two contexts by checking the context code in the lParam parameter.
-        /// </summary>
-        private const int WM_SYSKEYUP = 0x105;
-
-        private const byte VK_SHIFT = 0x10;
-        private const byte VK_CAPITAL = 0x14;
-        private const byte VK_NUMLOCK = 0x90;
-
-        #endregion
-
         #region Callback functions
 
         /// <summary>
@@ -442,170 +457,328 @@ namespace WindowsHooks
         /// procedure does not call CallNextHookEx, the return value should be zero.
         /// </returns>
         /// <remarks>
-        /// http://msdn.microsoft.com/library/default.asp?url=/library/en-us/winui/winui/windowsuserinterface/windowing/hooks/hookreference/hookfunctions/callwndproc.asp
+        /// https://learn.microsoft.com/en-us/previous-versions/windows/desktop/legacy/ms644975(v=vs.85)
         /// </remarks>
-        private delegate int HookProc(int nCode, int wParam, IntPtr lParam);
+        private delegate int HookProc(int nCode, UIntPtr wParam, IntPtr lParam);
+
+        /// <summary>
+        /// Create an argument for mouse event handler.
+        /// </summary>
+        /// <param name="message">The identifier of the mouse message.</param>
+        /// <param name="data">Additional 32 bit information about mouse event.</param>
+        /// <param name="point">The x- and y-coordinates of the cursor, in screen coordinates.</param>
+        /// <returns>Mouse event arguments</returns>
+        private MouseEventArgs CreateMouseEventArgs(nuint message,uint data, POINT point)
+        {
+            MouseEvents mouseEvent = MouseEvents.Unknown;
+            MouseButtons button = MouseButtons.None;
+            ushort highWord = (ushort)(data >> 16);
+            short mouseDelta = 0;
+            switch (message)
+            {
+                case WM_MOUSEMOVE:
+                    mouseEvent = MouseEvents.Move;
+                    break;
+                case WM_LBUTTONDOWN:
+                    mouseEvent = MouseEvents.Down;
+                    button = MouseButtons.Left;
+                    break;
+                case WM_LBUTTONUP:
+                    mouseEvent = MouseEvents.Up;
+                    button = MouseButtons.Left;
+                    break;
+                case WM_LBUTTONDBLCLK:
+                    mouseEvent = MouseEvents.DoubleClick;
+                    button = MouseButtons.Left;
+                    break;
+                case WM_RBUTTONDOWN:
+                    mouseEvent = MouseEvents.Down;
+                    button = MouseButtons.Right;
+                    break;
+                case WM_RBUTTONUP:
+                    mouseEvent = MouseEvents.Up;
+                    button = MouseButtons.Right;
+                    break;
+                case WM_RBUTTONDBLCLK:
+                    mouseEvent = MouseEvents.DoubleClick;
+                    button = MouseButtons.Right;
+                    break;
+                case WM_MBUTTONDOWN:
+                    mouseEvent = MouseEvents.Down;
+                    button = MouseButtons.Middle;
+                    break;
+                case WM_MBUTTONUP:
+                    mouseEvent = MouseEvents.Up;
+                    button = MouseButtons.Middle;
+                    break;
+                case WM_MBUTTONDBLCLK:
+                    mouseEvent = MouseEvents.DoubleClick;
+                    button = MouseButtons.Middle;
+                    break;
+                case WM_MOUSEWHEEL:
+                    mouseEvent = MouseEvents.Wheel;
+                    mouseDelta = (short)highWord;
+                    break;
+                case WM_XBUTTONDOWN:
+                    mouseEvent = MouseEvents.Down;
+                    switch (highWord)
+                    {
+                        case 0x0001:
+                            button = MouseButtons.XButton1;
+                            break;
+                        case 0x0002:
+                            button = MouseButtons.XButton1;
+                            break;
+                    }
+                    break;
+                case WM_XBUTTONUP:
+                    mouseEvent = MouseEvents.Up;
+                    switch (highWord)
+                    {
+                        case 0x0001:
+                            button = MouseButtons.XButton1;
+                            break;
+                        case 0x0002:
+                            button = MouseButtons.XButton1;
+                            break;
+                    }
+                    break;
+                case WM_XBUTTONDBLCLK:
+                    mouseEvent = MouseEvents.DoubleClick;
+                    switch (highWord)
+                    {
+                        case 0x0001:
+                            button = MouseButtons.XButton1;
+                            break;
+                        case 0x0002:
+                            button = MouseButtons.XButton1;
+                            break;
+                    }
+                    break;
+            }
+            //generate event
+            return new WindowsHooks.MouseEventArgs(mouseEvent, button, point.x, point.y, mouseDelta);
+        }
 
         /// <summary>
         /// A callback function which will be called every time a mouse activity detected.
         /// </summary>
         /// <param name="nCode">
-        /// [in] Specifies whether the hook procedure must process the message.
-        /// If nCode is HC_ACTION, the hook procedure must process the message.
+        /// [in] A code the hook procedure uses to determine how to process the message.
         /// If nCode is less than zero, the hook procedure must pass the message to the
-        /// CallNextHookEx function without further processing and must return the
-        /// value returned by CallNextHookEx.
+        /// CallNextHookEx function without further processing and should return the value
+        /// returned by CallNextHookEx.
         /// </param>
         /// <param name="wParam">
-        /// [in] Specifies whether the message was sent by the current thread.
-        /// If the message was sent by the current thread, it is nonzero; otherwise, it is zero.
+        /// [in] The identifier of the mouse message.
+        /// This parameter can be one of the following messages: WM_LBUTTONDOWN,
+        /// WM_LBUTTONUP, WM_MOUSEMOVE, WM_MOUSEWHEEL, WM_RBUTTONDOWN or WM_RBUTTONUP.
         /// </param>
         /// <param name="lParam">
-        /// [in] Pointer to a CWPSTRUCT structure that contains details about the message.
+        /// [in] A pointer to an MSLLHOOKSTRUCT structure.
         /// </param>
         /// <returns>
         /// If nCode is less than zero, the hook procedure must return the value returned by CallNextHookEx.
-        /// If nCode is greater than or equal to zero, it is highly recommended that you call CallNextHookEx
-        /// and return the value it returns; otherwise, other applications that have installed WH_CALLWNDPROC
-        /// hooks will not receive hook notifications and may behave incorrectly as a result. If the hook
-        /// procedure does not call CallNextHookEx, the return value should be zero.
+        /// If nCode is greater than or equal to zero, and the hook procedure did not process the message,
+        /// it is highly recommended that you call CallNextHookEx and return the value it returns; otherwise,
+        /// other applications that have installed WH_MOUSE_LL hooks will not receive hook notifications and
+        /// may behave incorrectly as a result.
+        /// If the hook procedure processed the message, it may return a nonzero value to prevent the system
+        /// from passing the message to the rest of the hook chain or the target window procedure.
         /// </returns>
-        private int MouseHookProc(int nCode, int wParam, IntPtr lParam)
+        /// <remarks>
+        /// https://learn.microsoft.com/en-us/windows/win32/winmsg/mouseproc
+        /// </remarks>
+        private int MouseProc(int nCode, UIntPtr wParam, IntPtr lParam)
         {
-            // if ok and someone listens to our events
-            if ((nCode >= 0) && (OnMouseActivity != null))
+            //If nCode is less than zero, the hook procedure must pass the message to the CallNextHookEx function
+            //without further processing and should return the value returned by CallNextHookEx.
+            if (nCode < 0)
             {
-                //Marshall the data from callback.
-                MouseLLHookStruct mouseHookStruct = (MouseLLHookStruct)Marshal.PtrToStructure(lParam, typeof(MouseLLHookStruct));
-
-                //detect button clicked
-                MouseButtons button = MouseButtons.None;
-                short mouseDelta = 0;
-                switch (wParam)
-                {
-                    case WM_LBUTTONDOWN:
-                        //case WM_LBUTTONUP:
-                        //case WM_LBUTTONDBLCLK:
-                        button = MouseButtons.Left;
-                        break;
-                    case WM_RBUTTONDOWN:
-                        //case WM_RBUTTONUP:
-                        //case WM_RBUTTONDBLCLK:
-                        button = MouseButtons.Right;
-                        break;
-                    case WM_MOUSEWHEEL:
-                        //If the message is WM_MOUSEWHEEL, the high-order word of mouseData member is the wheel delta.
-                        //One wheel click is defined as WHEEL_DELTA, which is 120.
-                        //(value >> 16) & 0xffff; retrieves the high-order word from the given 32-bit value
-                        mouseDelta = (short)((mouseHookStruct.mouseData >> 16) & 0xffff);
-                        //TODO: X BUTTONS (I havent them so was unable to test)
-                        //If the message is WM_XBUTTONDOWN, WM_XBUTTONUP, WM_XBUTTONDBLCLK, WM_NCXBUTTONDOWN, WM_NCXBUTTONUP,
-                        //or WM_NCXBUTTONDBLCLK, the high-order word specifies which X button was pressed or released,
-                        //and the low-order word is reserved. This value can be one or more of the following values.
-                        //Otherwise, mouseData is not used.
-                        break;
-                }
-
-                //double clicks
-                int clickCount = 0;
-                if (button != MouseButtons.None)
-                    if (wParam == WM_LBUTTONDBLCLK || wParam == WM_RBUTTONDBLCLK) clickCount = 2;
-                    else clickCount = 1;
-
-                //generate event
-                MouseEventArgs e = new MouseEventArgs(
-                                                   button,
-                                                   clickCount,
-                                                   mouseHookStruct.pt.x,
-                                                   mouseHookStruct.pt.y,
-                                                   mouseDelta);
-                //raise it
-                OnMouseActivity(this, e);
+                return CallNextHookEx(hMouseHook, nCode, wParam, lParam);
             }
-            //call next hook
-            return CallNextHookEx(hMouseHook, nCode, wParam, lParam);
+               
+            //Marshall the data from callback.
+            MouseHookStructEx mouseHookStruct = Marshal.PtrToStructure<MouseHookStructEx>(lParam);
+
+            MouseEventArgs eventArgs = CreateMouseEventArgs(wParam, mouseHookStruct.mouseData, mouseHookStruct.pt);
+
+            //Raise mouse event
+            OnMouseEvent?.Invoke(this, eventArgs);
+            
+            return 0;
+        }
+
+        /// <summary>
+        /// A callback function which will be called every time a mouse activity detected.
+        /// </summary>
+        /// <param name="nCode">
+        /// [in] A code the hook procedure uses to determine how to process the message.
+        /// If nCode is less than zero, the hook procedure must pass the message to the
+        /// CallNextHookEx function without further processing and should return the value
+        /// returned by CallNextHookEx.
+        /// </param>
+        /// <param name="wParam">
+        /// [in] The identifier of the mouse message.
+        /// This parameter can be one of the following messages: WM_LBUTTONDOWN,
+        /// WM_LBUTTONUP, WM_MOUSEMOVE, WM_MOUSEWHEEL, WM_RBUTTONDOWN or WM_RBUTTONUP.
+        /// </param>
+        /// <param name="lParam">
+        /// [in] A pointer to an MSLLHOOKSTRUCT structure.
+        /// </param>
+        /// <returns>
+        /// If nCode is less than zero, the hook procedure must return the value returned by CallNextHookEx.
+        /// If nCode is greater than or equal to zero, and the hook procedure did not process the message,
+        /// it is highly recommended that you call CallNextHookEx and return the value it returns; otherwise,
+        /// other applications that have installed WH_MOUSE_LL hooks will not receive hook notifications and
+        /// may behave incorrectly as a result.
+        /// If the hook procedure processed the message, it may return a nonzero value to prevent the system
+        /// from passing the message to the rest of the hook chain or the target window procedure.
+        /// </returns>
+        /// <remarks>
+        /// https://learn.microsoft.com/en-us/windows/win32/winmsg/lowlevelmouseproc
+        /// </remarks>
+        private int LowLevelMouseProc(int nCode, UIntPtr wParam, IntPtr lParam)
+        {
+            //If nCode is less than zero, the hook procedure must pass the message to the CallNextHookEx function
+            //without further processing and should return the value returned by CallNextHookEx.
+            if (nCode < 0)
+            {
+                return CallNextHookEx(hMouseHook, nCode, wParam, lParam);
+            }
+
+            //Marshall the data from callback.
+            MouseHookStructEx mouseHookStruct = Marshal.PtrToStructure<MouseHookStructEx>(lParam);
+
+            MouseEventArgs eventArgs = CreateMouseEventArgs(wParam, mouseHookStruct.mouseData, mouseHookStruct.pt);
+
+            //Raise mouse event
+            OnMouseEvent?.Invoke(this, eventArgs);
+
+            return 0;
         }
 
         /// <summary>
         /// A callback function which will be called every time a keyboard activity detected.
         /// </summary>
         /// <param name="nCode">
-        /// [in] Specifies whether the hook procedure must process the message.
-        /// If nCode is HC_ACTION, the hook procedure must process the message.
-        /// If nCode is less than zero, the hook procedure must pass the message to the
-        /// CallNextHookEx function without further processing and must return the
-        /// value returned by CallNextHookEx.
+        /// [in] A code the hook procedure uses to determine how to process the message.
+        /// If code is less than zero, the hook procedure must pass the message to the
+        /// CallNextHookEx function without further processing and should return the value
+        /// returned by CallNextHookEx.
         /// </param>
         /// <param name="wParam">
-        /// [in] Specifies whether the message was sent by the current thread.
-        /// If the message was sent by the current thread, it is nonzero; otherwise, it is zero.
+        /// [in] The virtual-key code of the key that generated the keystroke message.
         /// </param>
         /// <param name="lParam">
-        /// [in] Pointer to a CWPSTRUCT structure that contains details about the message.
+        /// [in] The repeat count, scan code, extended-key flag, context code, previous key-state flag, and
+        /// transition-state flag. For more information about The lParam parameter, see Keystroke Message Flags.
+        /// </param>
+        /// <returns>
+        /// If code is less than zero, the hook procedure must return the value returned by CallNextHookEx.
+        /// If code is greater than or equal to zero, and the hook procedure did not process the message,
+        /// it is highly recommended that you call CallNextHookEx and return the value it returns; otherwise,
+        /// other applications that have installed WH_KEYBOARD hooks will not receive hook notifications and
+        /// may behave incorrectly as a result.
+        /// If the hook procedure processed the message, it may return a nonzero value to prevent the system
+        /// from passing the message to the rest of the hook chain or the target window procedure.
+        /// </returns>
+        /// <remarks>
+        /// https://learn.microsoft.com/en-us/windows/win32/winmsg/keyboardproc
+        /// </remarks>
+        private int KeyboardHookProc(int nCode, UIntPtr wParam, IntPtr lParam)
+        {
+            //If nCode is less than zero, the hook procedure must pass the message to the CallNextHookEx function
+            //without further processing and should return the value returned by CallNextHookEx.
+            if (nCode < 0)
+            {
+                return CallNextHookEx(hMouseHook, nCode, wParam, lParam);
+            }
+
+            UInt32 flags = (UInt32)lParam;
+            //The value is 1 if the key is down before the message is sent; it is 0 if the key is up.
+            byte prevState = (byte)(flags >> 30 & 1);
+            //The value is 0 if the key is being pressed and 1 if it is being released.
+            byte tranState = (byte)(flags >> 31);
+            KeyEventArgs e = new KeyEventArgs((Keys)wParam);
+            KeyboardEvents kbEvent = KeyboardEvents.Unknown;
+            if (tranState == 0)
+            {
+                if (prevState == 1)
+                    kbEvent = KeyboardEvents.KeyPress;
+                else
+                    kbEvent = KeyboardEvents.KeyDown;
+            }
+            else
+            {
+                kbEvent = KeyboardEvents.KeyDown;
+            }
+
+            //Raise keyboard event
+            OnKeyboardEvent?.Invoke(this, new KeyboardEventArgs(kbEvent, (Keys)wParam));
+
+            return 0;
+        }
+
+        /// <summary>
+        /// A callback function which will be called every time a keyboard activity detected.
+        /// </summary>
+        /// <param name="nCode">
+        /// [in] A code the hook procedure uses to determine how to process the message.
+        /// If nCode is less than zero, the hook procedure must pass the message to the
+        /// CallNextHookEx function without further processing and should return the value
+        /// returned by CallNextHookEx.
+        /// </param>
+        /// <param name="wParam">
+        /// [in] The identifier of the keyboard message.
+        /// This parameter can be one of the following messages: WM_KEYDOWN, WM_KEYUP, WM_SYSKEYDOWN, or WM_SYSKEYUP.
+        /// </param>
+        /// <param name="lParam">
+        /// [in] A pointer to a KBDLLHOOKSTRUCT structure.
         /// </param>
         /// <returns>
         /// If nCode is less than zero, the hook procedure must return the value returned by CallNextHookEx.
-        /// If nCode is greater than or equal to zero, it is highly recommended that you call CallNextHookEx
-        /// and return the value it returns; otherwise, other applications that have installed WH_CALLWNDPROC
-        /// hooks will not receive hook notifications and may behave incorrectly as a result. If the hook
-        /// procedure does not call CallNextHookEx, the return value should be zero.
+        /// If nCode is greater than or equal to zero, and the hook procedure did not process the message,
+        /// it is highly recommended that you call CallNextHookEx and return the value it returns; otherwise,
+        /// other applications that have installed WH_KEYBOARD_LL hooks will not receive hook notifications
+        /// and may behave incorrectly as a result.
+        /// If the hook procedure processed the message, it may return a nonzero value to prevent the system
+        /// from passing the message to the rest of the hook chain or the target window procedure.
         /// </returns>
-        private int KeyboardHookProc(int nCode, Int32 wParam, IntPtr lParam)
+        /// <remarks>
+        /// https://learn.microsoft.com/en-us/windows/win32/winmsg/lowlevelkeyboardproc
+        /// </remarks>
+        private int LowLevelKeyboardHookProc(int nCode, UIntPtr wParam, IntPtr lParam)
         {
-            //indicates if any of underlaing events set e.Handled flag
-            bool handled = false;
-            //it was ok and someone listens to events
-            if ((nCode >= 0) && (KeyDown != null || KeyUp != null || KeyPress != null))
+            //If nCode is less than zero, the hook procedure must pass the message to the CallNextHookEx function
+            //without further processing and should return the value returned by CallNextHookEx.
+            if (nCode < 0)
             {
-                //read structure KeyboardHookStruct at lParam
-                KeyboardHookStruct MyKeyboardHookStruct = (KeyboardHookStruct)Marshal.PtrToStructure(lParam, typeof(KeyboardHookStruct));
-                //raise KeyDown
-                if (KeyDown != null && (wParam == WM_KEYDOWN || wParam == WM_SYSKEYDOWN))
-                {
-                    Keys keyData = (Keys)MyKeyboardHookStruct.vkCode;
-                    KeyEventArgs e = new KeyEventArgs(keyData);
-                    KeyDown(this, e);
-                    handled = e.Handled;
-                }
-
-                // raise KeyPress
-                if (KeyPress != null && wParam == WM_KEYDOWN)
-                {
-                    bool isDownShift = (GetKeyState(VK_SHIFT) & 0x80) == 0x80;
-                    bool isDownCapslock = GetKeyState(VK_CAPITAL) != 0;
-
-                    byte[] keyState = new byte[256];
-                    GetKeyboardState(keyState);
-                    byte[] inBuffer = new byte[2];
-                    if (ToAscii(MyKeyboardHookStruct.vkCode,
-                              MyKeyboardHookStruct.scanCode,
-                              keyState,
-                              inBuffer,
-                              MyKeyboardHookStruct.flags) == 1)
-                    {
-                        char key = (char)inBuffer[0];
-                        if ((isDownCapslock ^ isDownShift) && Char.IsLetter(key)) key = Char.ToUpper(key);
-                        KeyPressEventArgs e = new KeyPressEventArgs(key);
-                        KeyPress(this, e);
-                        handled = handled || e.Handled;
-                    }
-                }
-
-                // raise KeyUp
-                if (KeyUp != null && (wParam == WM_KEYUP || wParam == WM_SYSKEYUP))
-                {
-                    Keys keyData = (Keys)MyKeyboardHookStruct.vkCode;
-                    KeyEventArgs e = new KeyEventArgs(keyData);
-                    KeyUp(this, e);
-                    handled = handled || e.Handled;
-                }
-
+                return CallNextHookEx(hMouseHook, nCode, wParam, lParam);
             }
 
-            //if event handled in application do not handoff to other listeners
-            if (handled)
-                return 1;
-            return CallNextHookEx(hKeyboardHook, nCode, wParam, lParam);
+            //read structure KeyboardHookStruct at lParam
+            LowLevelKeyboardHookStruct MyKeyboardHookStruct = Marshal.PtrToStructure<LowLevelKeyboardHookStruct>(lParam);
+            //The value is 0 if the key is being pressed and 1 if it is being released.
+            byte tranState = (byte)(MyKeyboardHookStruct.flags >> 7 & 1);
+            byte repeatCount = (byte)(MyKeyboardHookStruct.flags & 0xffff);
+            KeyboardEvents kbEvent = KeyboardEvents.Unknown;
+            if (tranState == 0)
+            {
+                if (repeatCount > 0)
+                    kbEvent = KeyboardEvents.KeyPress;
+                else
+                    kbEvent = KeyboardEvents.KeyDown;
+            }
+            else
+            {
+                kbEvent = KeyboardEvents.KeyUp;
+            }
+
+            //Raise keyboard event
+            OnKeyboardEvent?.Invoke(this, new KeyboardEventArgs(kbEvent, (Keys)MyKeyboardHookStruct.vkCode));
+
+            return 0;
         }
 
         #endregion

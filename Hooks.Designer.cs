@@ -597,7 +597,7 @@ namespace WindowsHooks
             {
                 return CallNextHookEx(hMouseHook, nCode, wParam, lParam);
             }
-               
+
             //Marshall the data from callback.
             MouseHookStructEx mouseHookStruct = Marshal.PtrToStructure<MouseHookStructEx>(lParam);
 
@@ -605,7 +605,7 @@ namespace WindowsHooks
 
             //Raise mouse event
             OnMouseEvent?.Invoke(this, eventArgs);
-            
+
             return 0;
         }
 

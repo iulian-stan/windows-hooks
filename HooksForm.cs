@@ -55,7 +55,7 @@ namespace WindowsHooks
                 case MouseEvents.Move:
                 case MouseEvents.Wheel:
                     labelPosGlobal.Text = string.Format("x={0}  y={1} wheel={2}", e.X, e.Y, e.Delta);
-                    break;        
+                    break;
             }
         }
 

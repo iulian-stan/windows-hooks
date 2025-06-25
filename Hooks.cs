@@ -3,7 +3,6 @@ using System.ComponentModel;
 using System.Reflection;
 using System.Runtime.InteropServices;
 
-
 namespace WindowsHooks
 {
     /// <summary>
@@ -28,7 +27,6 @@ namespace WindowsHooks
             //uninstall hooks and do not throw exceptions
             Stop(true, true, false);
         }
-
 
         #region Event handlers
 
